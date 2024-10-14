@@ -1,0 +1,50 @@
+const int LED_PIN = 12;
+const int BUTTON_PIN = 2;
+
+bool ledState = false;
+bool buttonState = false;
+bool lastButtonState = false;
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  Serial.begin(9600);
+}
+
+void toggleLED() {
+  ledState = !ledState;
+  digitalWrite(LED_PIN, ledState);
+  Serial.println(ledState ? "LED is ON" : "LED is OFF");
+}
+
+void handleButton() {
+  buttonState = digitalRead(BUTTON_PIN) == LOW;
+  if (buttonState && !lastButtonState) {
+    toggleLED();
+    Serial.println("(via Button)");
+  }
+  lastButtonState = buttonState;
+}
+
+void handleSerial() {
+  if (Serial.available() > 0) {
+    String command = Serial.readStringUntil('\n');
+    command.trim();
+    command.toLowerCase();
+
+    if (command == "on" && !ledState) {
+      toggleLED();
+      Serial.println("(via Serial)");
+    } else if (command == "off" && ledState) {
+      toggleLED();
+      Serial.println("(via Serial)");
+    } else if (command != "on" && command != "off") {
+      Serial.println("Unknown command");
+    }
+  }
+}
+
+void loop() {
+  handleButton();
+  handleSerial();
+}
